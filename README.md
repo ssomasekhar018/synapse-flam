@@ -1,27 +1,44 @@
-# Synapse — AI Interactive Study Assistant
+# 🧠 Synapse — AI Interactive Study Assistant
 
-![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
-![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?logo=zod&logoColor=white)
-![Express](https://img.shields.io/badge/Express-Backend-000000?logo=express&logoColor=white)
-![Gemini API](https://img.shields.io/badge/Gemini_API-Proxy-8E75B2?logo=google&logoColor=white)
+> Transform notes into interactive flashcards and quizzes with AI.
 
-Turn any study topic or lecture notes into structured flashcards and quizzes using AI.
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)]()
+[![Vite](https://img.shields.io/badge/Vite-8-purple?logo=vite)]()
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38BDF8?logo=tailwindcss)]()
+[![Gemini](https://img.shields.io/badge/Gemini-AI-orange)]()
+[![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1)]()
 
-Synapse is a React application built for the Flam Frontend Internship assignment. The project focuses on one core problem: **safely converting unpredictable AI responses into reliable, interactive UI**.
+## 🔗 Live Demo
 
-Instead of rendering raw LLM output, every response is:
-- Generated through a secure backend proxy
-- Parsed defensively
-- Validated with Zod
-- Rendered only after passing schema validation
+🌐 **Production:** [https://synapse-flam-two.vercel.app/](https://synapse-flam-two.vercel.app/)
 
-Built with an emphasis on:
-- **Reliability**
-- **Error handling**
-- **Maintainability**
-- **Defensive parsing**
+📦 **Repository:** [https://github.com/ssomasekhar018/synapse-flam](https://github.com/ssomasekhar018/synapse-flam)
+
+---
+
+## 📖 Overview
+
+Synapse is an AI-powered study assistant that converts topics or lecture notes into interactive flashcards and self-grading quizzes.
+
+Unlike a traditional AI chatbot, Synapse **never renders raw LLM output directly**. Every response is routed through a secure backend proxy, parsed, validated using Zod, and only then rendered as structured React components.
+
+The project focuses on reliability, defensive programming, and robust frontend architecture.
+
+---
+
+## ✨ Features
+
+- 🤖 **AI-Powered Material Generation**: Generates contextual flashcards and quizzes via Gemini API.
+- 📚 **Interactive Flashcards**: 3D flip card deck with question front and answer back, complete with keyboard controls.
+- 📝 **Multiple-Choice Quiz Engine**: Self-grading quiz interface with immediate choice feedback and score tracking.
+- 🔄 **Retry Wrong Answers Only**: Dynamically filter and re-quiz only questions missed during the previous attempt.
+- ⚡ **Fast React + Vite Frontend**: Rapid component-driven state updates.
+- 🔒 **Backend API Proxy**: Server-side proxy hides `GEMINI_API_KEY` from client bundles.
+- ✅ **Strict Zod Validation**: Enforces exact JSON shape and bounds (`0 <= correctIndex < options.length`).
+- 🛡 **Graceful Malformed Output Handling**: Strips fences, catches parse errors, and displays user-friendly error UI with retries.
+- ⏱ **Client-Side Timeout Protection**: 20-second `AbortSignal` timeout prevents indefinite hanging.
+- 🚦 **Race-Condition Protection**: Request counter + `AbortController` cancels out-of-order response overwrites.
+- 📱 **Responsive & Accessible**: Works seamlessly across mobile viewports with keyboard navigation support.
 
 ---
 
@@ -98,21 +115,10 @@ React Application State
 
 ---
 
-## 📸 Screenshots & Demo
-
-### Screenshots
+## 📸 Screenshots
 
 #### Home / Input Form
-![Home Screen](https://raw.githubusercontent.com/placeholder/home.png)
-
-#### Interactive 3D Flashcards
-![Flashcards View](https://raw.githubusercontent.com/placeholder/flashcards.png)
-
-#### Practice Quiz Engine
-![Quiz View](https://raw.githubusercontent.com/placeholder/quiz.png)
-
-#### Graceful Error Handling
-![Error Handling](https://raw.githubusercontent.com/placeholder/error.png)
+![Home Screen](https://raw.githubusercontent.com/ssomasekhar018/synapse-flam/main/client/src/assets/hero.png)
 
 ---
 
@@ -120,6 +126,8 @@ React Application State
 
 ```
 study-assistant/
+├── api/
+│   └── generate.js             # Root Vercel serverless function entrypoint
 ├── client/
 │   ├── src/
 │   │   ├── components/
@@ -139,8 +147,9 @@ study-assistant/
 │   └── package.json
 ├── server/
 │   ├── api/
-│   │   └── generate.js             # Vercel serverless / Express proxy handler
+│   │   └── generate.js             # Express middleware handler
 │   └── index.js                    # Local Express server runner
+├── vercel.json                     # Vercel deployment configuration
 ├── README.md
 ├── .env.example
 └── package.json
@@ -225,11 +234,13 @@ I can explain and modify every part of the codebase during review.
 
 ## 🔮 Future Improvements
 
-- Streaming AI responses
-- Session history persistence (IndexedDB / LocalStorage)
 - User authentication
-- Export flashcards (PDF / Anki format)
-- AI-powered study recommendations
+- Study history & persistence (IndexedDB / LocalStorage)
+- Spaced repetition scheduling
+- PDF import & extraction
+- Image-based notes OCR
+- Multi-language support
+- Progress analytics & recommendations
 
 ---
 
@@ -239,3 +250,23 @@ I can explain and modify every part of the codebase during review.
 26 July 2026 – 29 July 2026
 
 The project was developed incrementally over three days, with multiple iterations focused on architecture, defensive error handling, UI refinement, testing, and documentation.
+
+### Task Breakdown (~7 Hours Total)
+- **Scaffolding & Server Proxy setup**: 1 hr
+- **Zod Schema & Parser validation**: 1 hr
+- **Input Flow & Loading states**: 1 hr
+- **Interactive 3D Flashcards**: 1 hr
+- **Quiz Engine with Wrong-Answer Retry**: 1 hr
+- **Race Condition Guard & Timeout Safety**: 1 hr
+- **Testing & Documentation**: 1 hr
+
+---
+
+## 👨‍💻 Developer
+
+**Somasekhara Srinivas Sannapaneni**  
+GitHub: [https://github.com/ssomasekhar018](https://github.com/ssomasekhar018)
+
+---
+
+### ⭐ If you found this project interesting, consider giving it a star!
