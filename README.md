@@ -233,8 +233,14 @@ I can explain and modify every part of the codebase during review.
 
 ---
 
-## ⏱️ Time Spent Breakdown (~7 Hours Total)
+## ⏱️ Development Timeline
 
+**Development Period:**  
+26 July 2026 – 29 July 2026
+
+The project was developed incrementally over three days, with multiple iterations focused on architecture, defensive error handling, UI refinement, testing, and documentation.
+
+### Task Breakdown (~7 Hours Total)
 - **Scaffolding & Server Proxy setup**: 1 hr
 - **Zod Schema & Parser validation**: 1 hr
 - **Input Flow & Loading states**: 1 hr
