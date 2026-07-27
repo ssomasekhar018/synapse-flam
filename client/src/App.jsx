@@ -103,37 +103,39 @@ export function App() {
             </div>
           </div>
 
-          {/* Quick Mock Testing Controls for Reviewers / Live Interview */}
-          <div className="hidden md:flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 text-xs">
-            <span className="text-[11px] text-slate-400 font-semibold px-2 flex items-center gap-1">
-              <Bug className="w-3.5 h-3.5 text-amber-400" />
-              Edge-Case Testing:
-            </span>
-            <button
-              type="button"
-              onClick={() => handleGenerate({ topic: 'Test Malformed', difficulty: 'medium', mockError: 'malformed' })}
-              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
-              title="Test Malformed JSON output handling"
-            >
-              Malformed
-            </button>
-            <button
-              type="button"
-              onClick={() => handleGenerate({ topic: 'Test Wrong Shape', difficulty: 'medium', mockError: 'wrong_shape' })}
-              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
-              title="Test Zod Schema rejection"
-            >
-              Wrong Shape
-            </button>
-            <button
-              type="button"
-              onClick={() => handleGenerate({ topic: 'Test Slow Timeout', difficulty: 'medium', mockError: 'slow' })}
-              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
-              title="Test 20s Client Timeout"
-            >
-              Timeout (20s)
-            </button>
-          </div>
+          {/* Quick Mock Testing Controls for Reviewers / Live Interview (Dev Mode Only) */}
+          {import.meta.env.DEV && (
+            <div className="hidden md:flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 text-xs">
+              <span className="text-[11px] text-slate-400 font-semibold px-2 flex items-center gap-1">
+                <Bug className="w-3.5 h-3.5 text-amber-400" />
+                Edge-Case Testing:
+              </span>
+              <button
+                type="button"
+                onClick={() => handleGenerate({ topic: 'Test Malformed', difficulty: 'medium', mockError: 'malformed' })}
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
+                title="Test Malformed JSON output handling"
+              >
+                Malformed
+              </button>
+              <button
+                type="button"
+                onClick={() => handleGenerate({ topic: 'Test Wrong Shape', difficulty: 'medium', mockError: 'wrong_shape' })}
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
+                title="Test Zod Schema rejection"
+              >
+                Wrong Shape
+              </button>
+              <button
+                type="button"
+                onClick={() => handleGenerate({ topic: 'Test Slow Timeout', difficulty: 'medium', mockError: 'slow' })}
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
+                title="Test 20s Client Timeout"
+              >
+                Timeout (20s)
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
