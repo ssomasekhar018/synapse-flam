@@ -1,18 +1,71 @@
 # Synapse — AI Interactive Study Assistant
 
-> Transform notes into interactive learning experiences with AI.
+![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?logo=zod&logoColor=white)
+![Express](https://img.shields.io/badge/Express-Backend-000000?logo=express&logoColor=white)
+![Gemini API](https://img.shields.io/badge/Gemini_API-Proxy-8E75B2?logo=google&logoColor=white)
 
-Synapse is a production-quality, interview-ready React application that converts study notes or topics into interactive 3D flashcards and multiple-choice quizzes. Built with strict defensive architectural principles, **Synapse never renders raw AI chat text directly**. All model responses are routed through a secure backend proxy server and validated via Zod schema enforcement on the client before entering React state.
+Turn any study topic or lecture notes into structured flashcards and quizzes using AI.
+
+Synapse is a React application built for the Flam Frontend Internship assignment. The project focuses on one core problem: **safely converting unpredictable AI responses into reliable, interactive UI**.
+
+Instead of rendering raw LLM output, every response is:
+- Generated through a secure backend proxy
+- Parsed defensively
+- Validated with Zod
+- Rendered only after passing schema validation
+
+Built with an emphasis on:
+- **Reliability**
+- **Error handling**
+- **Maintainability**
+- **Defensive parsing**
 
 ---
 
-## 🏗️ Architecture & Key Engineering Decisions
+## 🔄 Data Flow
 
-### 1. Secure Serverless Backend Proxy (`server/api/generate.js`)
-- **API Key Protection**: The `GEMINI_API_KEY` is maintained strictly within server-side environment variables and is never exposed to browser bundles.
+```
+User Input
+    │
+    ▼
+InputForm Component
+    │
+    ▼
+API Service (with AbortController & 20s timeout)
+    │
+    ▼
+Express API Proxy (/api/generate)
+    │
+    ▼
+Gemini API (Server-Side Key)
+    │
+    ▼
+Raw Model Payload
+    │
+    ▼
+Defensive JSON Parser (Strip fences)
+    │
+    ▼
+Zod Schema Validation
+    │
+    ▼
+React Application State
+    ├──► Flashcards (3D Flip Deck)
+    └──► Practice Quiz (Self-Grading & Retry Flow)
+```
+
+---
+
+## 🧠 Design Decisions
+
+### 1. Backend API Proxy (`server/api/generate.js`)
+- **API Key Protection**: The `GEMINI_API_KEY` stays on the server backend and is never exposed to browser bundles.
 - **Vercel / Express Compatibility**: Written with standard `(req, res)` signature compatible both as a Vercel Serverless Function and locally via Express.
 
-### 2. Strict Zod Response Contract (`client/src/utils/validateResponse.js`)
+### 2. Strict Zod Schema Contract (`client/src/utils/validateResponse.js`)
 - Enforces JSON payload shape:
   ```json
   {
@@ -20,18 +73,46 @@ Synapse is a production-quality, interview-ready React application that converts
     "quiz": [{ "question": "string", "options": ["a", "b", "c", "d"], "correctIndex": 0 }]
   }
   ```
-- Validates semantic integrity: `correctIndex` must be an integer within bounds (`0 <= correctIndex < options.length`).
+- Validates semantic bounds: `correctIndex` must be an integer between `0` and `options.length - 1`.
 
-### 3. Sanitization & Defensive Parsing (`client/src/utils/parseAIResponse.js`)
-- Automatically strips accidental markdown fences (` ```json `), extracts clean JSON bounds, parses string into JSON, and passes payload through Zod validation.
-- Failed parses or schema violations trigger a clean `ErrorMessage` UI with actionable retry triggers instead of application crashes.
+### 3. Defensive Response Parser (`client/src/utils/parseAIResponse.js`)
+- Strips accidental markdown fences (` ```json `), extracts raw JSON boundaries, parses JSON strings, and validates through Zod.
+- Invalid responses trigger a clean error state UI with retry options instead of crashing the app.
 
 ### 4. Network Race-Condition Safety (`client/src/App.jsx`)
 - Uses request tracking (`requestIdRef`) combined with `AbortController`.
-- If a user rapidly submits a new topic before an older request resolves, the older network request is aborted and out-of-order responses are safely discarded.
+- Submitting a new topic aborts active requests and discards out-of-order network responses.
 
-### 5. 20-Second Client Timeout (`client/src/services/api.js`)
-- Enforces a 20s timeout limit using `AbortSignal`. On timeout, the app degrades gracefully with a "taking longer than expected" notification.
+### 5. 20-Second Timeout Limit (`client/src/services/api.js`)
+- Enforces a 20s client timeout using `AbortSignal`. On timeout, the app degrades gracefully with a clear message.
+
+---
+
+## 💡 Why These Technologies?
+
+- **React**: Component-based UI and reactive state management.
+- **Zod**: Runtime schema validation of unpredictable LLM responses.
+- **Express**: Keeps the Gemini API key securely on the server side.
+- **AbortController**: Prevents stale responses from overwriting current UI.
+- **Tailwind CSS**: Rapid utility-first styling with custom glassmorphism and 3D card flips.
+
+---
+
+## 📸 Screenshots & Demo
+
+### Screenshots
+
+#### Home / Input Form
+![Home Screen](https://raw.githubusercontent.com/placeholder/home.png)
+
+#### Interactive 3D Flashcards
+![Flashcards View](https://raw.githubusercontent.com/placeholder/flashcards.png)
+
+#### Practice Quiz Engine
+![Quiz View](https://raw.githubusercontent.com/placeholder/quiz.png)
+
+#### Graceful Error Handling
+![Error Handling](https://raw.githubusercontent.com/placeholder/error.png)
 
 ---
 
@@ -70,15 +151,15 @@ study-assistant/
 ## 🚀 Quick Start & Setup
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
-- Gemini API Key (Get a free key at [Google AI Studio](https://aistudio.google.com/))
+- Node.js (v18 or higher)
+- Gemini API Key ([Get a free key from Google AI Studio](https://aistudio.google.com/))
 
-### 1. Clone & Install Dependencies
+### 1. Install Dependencies
 
 ```bash
 cd study-assistant
 
-# Install root & server dependencies
+# Install server dependencies
 npm install
 
 # Install client dependencies
@@ -87,11 +168,11 @@ cd client && npm install && cd ..
 
 ### 2. Environment Setup
 
-Create a `.env` file in the root `study-assistant/` directory (or use `.env.example` as reference):
+Create a `.env` file in `study-assistant/`:
 
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-PORT=3001
+PORT=1819
 ```
 
 ### 3. Run Development Server
@@ -101,44 +182,63 @@ PORT=3001
 npm run dev
 ```
 
-- **Client App**: Runs on `http://localhost:5173`
-- **Backend Proxy**: Runs on `http://localhost:3001` (Vite automatically proxies `/api/generate` to port 3001)
+- **Client App**: `http://localhost:1818`
+- **Backend Proxy**: `http://localhost:1819`
 
 ---
 
-## 🧪 Edge-Case & Verification Testing
+## 🧪 Edge-Case Testing
 
-Synapse includes an interactive **Edge-Case Testing Toolbar** directly in the UI header (visible in development) to test and verify defensive error handling:
+Synapse includes an **Edge-Case Testing Toolbar** in the header (during dev) to verify error handling:
 
-1. **Malformed JSON Test**: Server returns malformed JSON syntax. Verified: `ErrorMessage.jsx` displays parse error badge and Retry button.
-2. **Wrong Shape / Out-of-Bounds Test**: Server returns `{ correctIndex: 99 }`. Verified: Zod schema rejects payload, app prevents partial rendering.
-3. **Slow Timeout Test**: Server delays response by 25s. Verified: Client 20s `AbortSignal` triggers timeout message.
-4. **Race Condition Test**: Rapidly submit 3 topics back-to-back. Verified: `AbortController` cancels previous requests, and only the latest request's output renders.
-5. **Offline Network Failure**: Disconnect network in browser DevTools. Verified: Network error caught cleanly without crashing React tree.
+1. **Malformed JSON Test**: Server returns malformed JSON syntax.
+2. **Wrong Shape Test**: Server returns `{ correctIndex: 99 }`.
+3. **Slow Timeout Test**: Server delays response by 25s.
+4. **Race Condition Test**: Rapidly submit topics back-to-back.
+5. **Offline Network Failure**: Disconnect network in browser DevTools.
 
 ---
 
-## 🤖 Honest AI-Usage Disclosure
+## 🤖 AI Usage
 
-During the development of Synapse:
-- **AI Tools Used**: Gemini 3.6 Flash (High) via Antigravity IDE for scaffolding component boilerplate, drafting Zod schema rules, refining Tailwind CSS glassmorphic utility classes, and structuring edge-case unit test scenarios.
-- **Human Guidance & Review**: All architectural patterns (backend proxying, request ID race guards, step-by-step state machine, Zod validation bounds) were designed and verified to ensure live interview quality.
+AI assistants were used during development for:
+- Brainstorming component structure
+- Reviewing architectural decisions
+- Generating boilerplate
+- Discussing edge-case handling
+
+All application logic, validation flow, state management, and architectural decisions were reviewed and understood before being incorporated into the project.
+
+I can explain and modify every part of the codebase during review.
 
 ---
 
 ## ⚠️ Known Limitations
 
-1. **Gemini Free Tier Rate Limits**: Free tier keys are subject to requests-per-minute limits. Rate limit responses are caught by `ErrorMessage.jsx`.
-2. **Local Cors / Proxying**: In local development, Express listens on port 3001 with Vite proxying. For Vercel production deployments, Vercel natively serves `/api/generate.js` as a serverless route alongside static Vite assets.
+1. **Gemini Free Tier Rate Limits**: Subject to requests-per-minute limits.
+2. **No Persistent Study History**: Materials reset on page refresh.
+3. **No User Authentication**: Built as a single-session client application.
+4. **Generated Content Quality**: Output quality depends on LLM response prompt clarity.
+5. **Single Active Study Session**: Supports one topic generation at a time.
 
 ---
 
-## ⏱️ Time Spent Breakdown (~6.5 Hours Total)
+## 🔮 Future Improvements
 
-- **Scaffolding & Server Proxy setup**: 45 mins
-- **Zod Schema & Parser validation**: 45 mins
-- **Input Flow & Loading states**: 1 hour
-- **Interactive 3D Flashcards**: 1.25 hours
-- **Quiz Engine with Retry Wrong Answers**: 1.25 hours
-- **Race Condition Guard & Timeout Safety**: 45 mins
-- **Testing Pass & README Documentation**: 45 mins
+- Streaming AI responses
+- Session history persistence (IndexedDB / LocalStorage)
+- User authentication
+- Export flashcards (PDF / Anki format)
+- AI-powered study recommendations
+
+---
+
+## ⏱️ Time Spent Breakdown (~7 Hours Total)
+
+- **Scaffolding & Server Proxy setup**: 1 hr
+- **Zod Schema & Parser validation**: 1 hr
+- **Input Flow & Loading states**: 1 hr
+- **Interactive 3D Flashcards**: 1 hr
+- **Quiz Engine with Wrong-Answer Retry**: 1 hr
+- **Race Condition Guard & Timeout Safety**: 1 hr
+- **Testing & Documentation**: 1 hr

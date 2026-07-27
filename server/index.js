@@ -10,7 +10,7 @@ require('dotenv').config(); // Fallback to current working directory .env
 const generateHandler = require('./api/generate');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 1819;
 
 app.use(cors());
 app.use(express.json());
