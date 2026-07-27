@@ -11,6 +11,8 @@ node_modules
 # Build output
 dist
 build
+client/dist
+client/build
 .vercel
 
 # Logs
