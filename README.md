@@ -5,7 +5,7 @@
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)]()
 [![Vite](https://img.shields.io/badge/Vite-8-purple?logo=vite)]()
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38BDF8?logo=tailwindcss)]()
-[![Gemini](https://img.shields.io/badge/Gemini-AI-orange)]()
+[![Gemini](https://img.shields.io/badge/Gemini-3.6_Flash-orange)]()
 [![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1)]()
 
 ## 🔗 Live Demo
@@ -131,7 +131,8 @@ study-assistant/
 ├── client/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Flashcard.jsx       # 3D Flip Card component with keyboard nav
+│   │   │   ├── SessionPanel.jsx    # Folder-tab session nav + mobile bar
+│   │   │   ├── Flashcard.jsx       # 3D flip card deck with stack + slide transitions
 │   │   │   ├── Quiz.jsx            # Dynamic quiz engine with wrong-answer retry
 │   │   │   ├── InputForm.jsx       # Topic input form, difficulty badges & presets
 │   │   │   ├── Loading.jsx         # Step-based animated loading state
@@ -181,18 +182,26 @@ Create a `.env` file in `study-assistant/`:
 
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
+GEMINI_MODEL=gemini-3.6-flash
 PORT=1819
 ```
 
-### 3. Run Development Server
+> **Note:** Bare `gemini-2.5-flash` returns 404 for many new API keys. Use `gemini-3.6-flash` or let the server auto-fallback. **Restart the server** after changing `.env` — backend code does not hot-reload.
+
+### 3. Run the App
+
+From the `study-assistant/` directory:
 
 ```bash
-# Run Express proxy server & Vite client concurrently:
-npm run dev
+npm install && npm start
 ```
+
+This installs root + client dependencies and starts both the Express proxy and Vite dev server.
 
 - **Client App**: `http://localhost:1818`
 - **Backend Proxy**: `http://localhost:1819`
+
+For development, `npm run dev` is an alias for `npm start`.
 
 ---
 

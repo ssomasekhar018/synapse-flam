@@ -1,47 +1,77 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw, AlertCircle, ShieldAlert } from 'lucide-react';
+
+function friendlyError(raw) {
+  const msg = typeof raw === 'string' ? raw : raw?.message || 'Something went wrong.';
+
+  if (msg.includes('404') && msg.toLowerCase().includes('model')) {
+    return {
+      title: 'Model not available',
+      detail:
+        'The configured Gemini model is unavailable for your API key. Set GEMINI_MODEL=gemini-3.6-flash in .env, then stop and restart npm start (Ctrl+C first — the server does not hot-reload).',
+      technical: msg,
+    };
+  }
+  if (msg.includes('GEMINI_API_KEY')) {
+    return {
+      title: 'API key missing',
+      detail: 'Add GEMINI_API_KEY to study-assistant/.env, then restart the server.',
+      technical: msg,
+    };
+  }
+  if (msg.includes('timed out') || msg.includes('20s')) {
+    return {
+      title: 'Request timed out',
+      detail: 'The model took longer than 20s. Try a shorter topic, or retry.',
+      technical: msg,
+    };
+  }
+  if (msg.includes('Malformed JSON') || msg.includes('Validation error')) {
+    return {
+      title: "Couldn't parse AI output",
+      detail: 'The model returned invalid structure. Retry usually fixes it.',
+      technical: msg,
+    };
+  }
+  if (msg.includes('Network error') || msg.includes('Failed to fetch')) {
+    return {
+      title: "Can't reach server",
+      detail: 'Confirm npm start is running (client :1818, proxy :1819).',
+      technical: msg,
+    };
+  }
+
+  return {
+    title: 'Generation failed',
+    detail: "We couldn't build your study materials. Try again with a shorter topic.",
+    technical: msg,
+  };
+}
 
 export function ErrorMessage({ error, onRetry }) {
-  const errorMessage = typeof error === 'string' ? error : error?.message || 'An unexpected error occurred.';
+  const { title, detail, technical } = friendlyError(error);
 
   return (
-    <div className="glass-panel rounded-2xl p-8 max-w-xl mx-auto my-8 border border-rose-500/30 bg-rose-950/20 shadow-2xl relative overflow-hidden">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
-          <AlertTriangle className="w-6 h-6" />
-        </div>
+    <div className="surface-raised p-6 sm:p-7 border-l-4 border-l-[var(--color-danger)]">
+      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-danger)] mb-2">
+        Error
+      </p>
+      <h3 className="font-display text-xl font-bold mb-2">{title}</h3>
+      <p className="text-sm text-[var(--color-ink-soft)] leading-relaxed mb-5">{detail}</p>
 
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-slate-100 mb-1 flex items-center gap-2">
-            Generation Error
-          </h3>
-          <p className="text-xs text-rose-300 font-medium mb-3">
-            The AI response could not be transformed into valid study materials.
-          </p>
+      <details className="mb-5">
+        <summary className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)] cursor-pointer hover:text-[var(--color-ink)]">
+          Technical details
+        </summary>
+        <pre className="mt-2 p-3 bg-[var(--color-mist)] border border-[var(--color-line)] text-[10px] font-mono text-[var(--color-ink-soft)] overflow-x-auto whitespace-pre-wrap break-words max-h-36 overflow-y-auto">
+          {technical}
+        </pre>
+      </details>
 
-          <div className="bg-slate-950/80 p-3 rounded-lg border border-rose-900/40 text-xs font-mono text-slate-300 mb-4 break-words leading-relaxed max-h-36 overflow-y-auto">
-            {errorMessage}
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-slate-400 flex items-center gap-1">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              Raw AI text blocked for safety
-            </span>
-
-            {onRetry && (
-              <button
-                type="button"
-                onClick={onRetry}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-rose-600/20 transition-all duration-200 flex items-center gap-1.5 active:scale-95"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Retry Generation
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      {onRetry && (
+        <button type="button" onClick={onRetry} className="btn-teal text-sm px-6 py-2.5">
+          Try again
+        </button>
+      )}
     </div>
   );
 }

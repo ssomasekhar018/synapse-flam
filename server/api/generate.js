@@ -28,6 +28,46 @@ CRITICAL RULES:
 5. Do NOT include markdown code fences (no \`\`\`json or \`\`\`).
 6. Do NOT include any introductory or concluding text, explanations, or prose. Return strictly valid JSON.`;
 
+/** Models to try, in order. New API keys often cannot use bare gemini-2.5-flash. */
+const DEFAULT_MODEL_FALLBACKS = [
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash-latest',
+];
+
+function buildModelList() {
+  const fromEnv = process.env.GEMINI_MODEL?.trim();
+  if (fromEnv) {
+    return [fromEnv, ...DEFAULT_MODEL_FALLBACKS.filter((m) => m !== fromEnv)];
+  }
+  return DEFAULT_MODEL_FALLBACKS;
+}
+
+async function callGemini({ apiKey, modelName, promptText }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  console.log('[Synapse] Using model:', modelName);
+  console.log('[Synapse] Endpoint:', url.replace(apiKey, '***'));
+
+  const apiResponse = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `${SYSTEM_PROMPT}\n\n${promptText}` }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        responseMimeType: 'application/json',
+      },
+    }),
+  });
+
+  return { apiResponse, modelName };
+}
+
 /**
  * Serverless / Express HTTP handler for AI study generation
  */
@@ -79,44 +119,44 @@ module.exports = async function handler(req, res) {
   }
 
   const promptText = `Topic/Notes: ${topic.trim()}\nDifficulty level: ${difficulty || 'medium'}`;
-
-  // Call Gemini REST API server-side
-  const modelName = 'gemini-1.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  const modelsToTry = buildModelList();
 
   try {
-    const apiResponse = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `${SYSTEM_PROMPT}\n\n${promptText}` }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
+    let lastError = null;
 
-    if (!apiResponse.ok) {
+    for (const modelName of modelsToTry) {
+      const { apiResponse } = await callGemini({ apiKey, modelName, promptText });
+
+      if (apiResponse.ok) {
+        const payload = await apiResponse.json();
+        const rawText = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        return res.status(200).send(rawText);
+      }
+
       const errorText = await apiResponse.text();
-      console.error('Gemini API Error:', apiResponse.status, errorText);
+      console.error(`[Synapse] Gemini error (${modelName}):`, apiResponse.status, errorText);
+
+      const isModelUnavailable =
+        apiResponse.status === 404 &&
+        (errorText.includes('not found') ||
+          errorText.includes('not available') ||
+          errorText.includes('NOT_FOUND'));
+
+      lastError = { status: apiResponse.status, errorText, modelName };
+
+      if (isModelUnavailable && modelName !== modelsToTry[modelsToTry.length - 1]) {
+        console.warn(`[Synapse] Model ${modelName} unavailable — trying next fallback…`);
+        continue;
+      }
+
       return res.status(apiResponse.status).json({
-        error: `Gemini API error (${apiResponse.status}): ${errorText}`,
+        error: `Gemini API error (${apiResponse.status}) on model "${modelName}": ${errorText}`,
       });
     }
 
-    const payload = await apiResponse.json();
-    const rawText = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Return the raw model text output to client for parsing & Zod validation
-    return res.status(200).send(rawText);
+    return res.status(lastError?.status || 502).json({
+      error: `Gemini API error (${lastError?.status}): ${lastError?.errorText || 'All model fallbacks failed.'}`,
+    });
   } catch (err) {
     console.error('Server proxy request error:', err);
     return res.status(500).json({
